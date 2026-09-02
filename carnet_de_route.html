@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carnet de route</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1B2430;
+    --paper: #EDF1EE;
+    --paper-raised: #FFFFFF;
+    --line: #C9D2CD;
+    --line-soft: #DCE3DF;
+    --text: #1B2430;
+    --text-soft: #5B6670;
+    --accent: #1D6F8C;
+    --accent-soft: #DCEAEE;
+    --rappel: #A8681A;
+    --rappel-soft: #F3E4CC;
+    --note: #5B6670;
+    --note-soft: #E4E8E5;
+    --done-flash: #3F8F5F;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #12191F;
+      --paper: #12191F;
+      --paper-raised: #1A222A;
+      --line: #2C3740;
+      --line-soft: #232D35;
+      --text: #E7ECE9;
+      --text-soft: #98A5A0;
+      --accent: #5CB2CE;
+      --accent-soft: #1D3239;
+      --rappel: #E0A63D;
+      --rappel-soft: #3A2E17;
+      --note: #98A5A0;
+      --note-soft: #232D35;
+      --done-flash: #5FBF83;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #12191F;
+    --paper: #12191F;
+    --paper-raised: #1A222A;
+    --line: #2C3740;
+    --line-soft: #232D35;
+    --text: #E7ECE9;
+    --text-soft: #98A5A0;
+    --accent: #5CB2CE;
+    --accent-soft: #1D3239;
+    --rappel: #E0A63D;
+    --rappel-soft: #3A2E17;
+    --note: #98A5A0;
+    --note-soft: #232D35;
+    --done-flash: #5FBF83;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--text);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 20px 14px 48px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  main { width: 100%; max-width: 540px; }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  h1 {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-weight: 800;
+    font-size: 1.55rem;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .sync {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--text-soft);
+    white-space: nowrap;
+  }
+  .sync-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--text-soft);
+    flex: none;
+  }
+  .sync-dot.live { background: var(--done-flash); }
+  .subtitle {
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    margin: 2px 0 26px;
+    max-width: 46ch;
+  }
+
+  section.grp { margin-bottom: 22px; }
+  .grp-label {
+    font-family: "Archivo", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin: 0 0 8px 2px;
+  }
+  .rows {
+    background: var(--paper-raised);
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-left: 3px solid var(--flag, var(--line));
+    border-bottom: 1px solid var(--line-soft);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .row:last-child { border-bottom: none; }
+  .row.rappel { --flag: var(--rappel); }
+  .row.tache { --flag: var(--accent); }
+  .row.note { --flag: var(--note); }
+  .row.completing { opacity: 0; transform: translateX(6px); }
+
+  .tap {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    flex: none;
+    margin-top: 1px;
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: transparent;
+    font-size: 0.7rem;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .row.note .tap { visibility: hidden; }
+  .tap:hover { border-color: var(--flag); }
+  .tap:active { background: var(--flag); border-color: var(--flag); color: var(--paper-raised); }
+
+  .row-body { flex: 1; min-width: 0; }
+  .row-desc {
+    font-size: 0.94rem;
+    line-height: 1.42;
+    word-wrap: break-word;
+  }
+  .row-date {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    color: var(--flag, var(--text-soft));
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .empty-all, .fallback {
+    background: var(--paper-raised);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .fallback strong { color: var(--text); }
+
+  .completed-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: none;
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text-soft);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    margin: 4px 0 0;
+  }
+  .completed-toggle[hidden] { display: none; }
+  .completed-toggle:hover { border-color: var(--line); }
+  .completed-toggle .chev { transition: transform 0.2s ease; }
+  .completed-toggle.open .chev { transform: rotate(180deg); }
+  .completed-list { margin-top: 8px; }
+  .completed-list[hidden] { display: none; }
+  .row.completed .row-desc { text-decoration: line-through; }
+  .row.completed { opacity: 0.7; }
+  .row.completed .row-date { color: var(--text-soft); }
+  .tap.undo { border-style: dashed; visibility: visible; font-size: 0.85rem; }
+  .tap.undo:hover { border-color: var(--accent); }
+  .tap.undo:active { background: var(--accent); border-color: var(--accent); border-style: solid; }
+
+  footer {
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line-soft);
+    color: var(--text-soft);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .row { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <header>
+    <h1>🧭 Carnet de route</h1>
+    <div class="sync"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">connexion…</span></div>
+  </header>
+  <p class="subtitle">Rappels, tâches et notes — ajoutés par texte ou vocal au bot, cochés du bout du doigt ici.</p>
+
+  <div id="content">
+    <div class="empty-all">Chargement du suivi…</div>
+  </div>
+
+  <button class="completed-toggle" id="completedToggle" type="button" hidden>
+    <span id="completedToggleLabel">✅ Complétées (0)</span>
+    <span class="chev">▾</span>
+  </button>
+  <div class="completed-list" id="completedList" hidden></div>
+
+  <footer>Ajoute ou complète un item en écrivant ou en parlant au bot Telegram — cette page se met à jour toute seule, aucun rafraîchissement requis.</footer>
+</main>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbwgteT0pqHw6WruNVZiKoD2wPehNwR07KOP4NCjbI4fMv7WapKxHL_XQH5AUdoz7rE0/exec";
+  const POLL_MS = 8000;
+  const MOIS_FR = ["jan","fév","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"];
+  const KIND_LABEL = { rappel: "Rappels", tache: "Tâches", note: "Notes" };
+  let hasLoadedOnce = false;
+
+  function todayIso() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  async function apiCall(params) {
+    const url = new URL(API_URL);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "api_error");
+    return data;
+  }
+
+  function formatDate(iso) {
+    const [y, m, d] = iso.split("-").map(Number);
+    return `${String(d).padStart(2, "0")} ${MOIS_FR[m - 1]}`;
+  }
+  function sortKey(item) {
+    return (item.date ? "0" : "1") + (item.date || "");
+  }
+
+  function setSync(label, live) {
+    document.getElementById("syncLabel").textContent = label;
+    document.getElementById("syncDot").classList.toggle("live", !!live);
+  }
+
+  function renderFallback() {
+    document.getElementById("content").innerHTML = `
+      <div class="fallback">
+        <strong>Impossible de joindre le Carnet de route.</strong><br><br>
+        Vérifie ta connexion — cette page réessaie automatiquement toutes les quelques secondes.
+      </div>`;
+    setSync("hors ligne", false);
+  }
+
+  function buildRow(item, kind, { completed }) {
+    const row = document.createElement("div");
+    row.className = "row " + kind + (completed ? " completed" : "");
+
+    const tap = document.createElement("button");
+    tap.className = "tap" + (completed ? " undo" : "");
+    if (completed) {
+      tap.setAttribute("aria-label", "Ramener en actif");
+      tap.textContent = "↺";
+      tap.addEventListener("click", () => {
+        tap.disabled = true;
+        apiCall({ action: "update", id: item.id, done: "false" })
+          .then(loadAndRender)
+          .catch(() => { tap.disabled = false; });
+      });
+    } else {
+      tap.setAttribute("aria-label", "Marquer complété");
+      tap.textContent = "✓";
+      if (kind !== "note") {
+        tap.addEventListener("click", () => {
+          row.classList.add("completing");
+          tap.disabled = true;
+          apiCall({ action: "update", id: item.id, done: "true", completed: todayIso() })
+            .then(loadAndRender)
+            .catch(() => {
+              row.classList.remove("completing");
+              tap.disabled = false;
+            });
+        });
+      }
+    }
+
+    const body = document.createElement("div");
+    body.className = "row-body";
+    const desc = document.createElement("div");
+    desc.className = "row-desc";
+    desc.textContent = item.description;
+    body.appendChild(desc);
+    const dateLabel = completed ? (item.completed ? `complété ${formatDate(item.completed)}` : "complété") : (item.date ? formatDate(item.date) : null);
+    if (dateLabel) {
+      const date = document.createElement("div");
+      date.className = "row-date";
+      date.textContent = dateLabel;
+      body.appendChild(date);
+    }
+
+    row.appendChild(tap);
+    row.appendChild(body);
+    return row;
+  }
+
+  function render(items) {
+    const active = items.filter(i => !i.done);
+    const done = items.filter(i => i.done);
+    const groups = {
+      rappel: active.filter(i => i.kind === "rappel").sort((a, b) => sortKey(a) < sortKey(b) ? -1 : 1),
+      tache: active.filter(i => i.kind === "tache").sort((a, b) => sortKey(a) < sortKey(b) ? -1 : 1),
+      note: active.filter(i => i.kind === "note"),
+    };
+    done.sort((a, b) => (b.completed || b.created || "").localeCompare(a.completed || a.created || ""));
+
+    const content = document.getElementById("content");
+    content.innerHTML = "";
+
+    const total = groups.rappel.length + groups.tache.length + groups.note.length;
+    if (total === 0) {
+      const div = document.createElement("div");
+      div.className = "empty-all";
+      div.textContent = "Rien pour l'instant. Envoie un rappel, une tâche ou une note au bot pour commencer.";
+      content.appendChild(div);
+    } else {
+      for (const kind of ["rappel", "tache", "note"]) {
+        const items = groups[kind];
+        if (!items.length) continue;
+
+        const section = document.createElement("section");
+        section.className = "grp";
+        const label = document.createElement("div");
+        label.className = "grp-label";
+        label.textContent = KIND_LABEL[kind];
+        section.appendChild(label);
+
+        const rows = document.createElement("div");
+        rows.className = "rows";
+        for (const item of items) rows.appendChild(buildRow(item, kind, { completed: false }));
+
+        section.appendChild(rows);
+        content.appendChild(section);
+      }
+    }
+
+    const toggle = document.getElementById("completedToggle");
+    const list = document.getElementById("completedList");
+    document.getElementById("completedToggleLabel").textContent = `✅ Complétées (${done.length})`;
+    toggle.hidden = done.length === 0;
+    if (done.length === 0) { list.hidden = true; toggle.classList.remove("open"); }
+
+    list.innerHTML = "";
+    const rows = document.createElement("div");
+    rows.className = "rows";
+    for (const item of done) rows.appendChild(buildRow(item, item.kind, { completed: true }));
+    list.appendChild(rows);
+
+    toggle.onclick = () => {
+      const open = toggle.classList.toggle("open");
+      list.hidden = !open;
+    };
+  }
+
+  async function loadAndRender() {
+    try {
+      const data = await apiCall({ action: "list" });
+      render(data.items);
+      hasLoadedOnce = true;
+      const now = new Date();
+      setSync(`maj ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`, true);
+    } catch (err) {
+      console.error("suivi fetch error", err);
+      if (!hasLoadedOnce) renderFallback();
+      else setSync("hors ligne", false);
+    }
+  }
+
+  loadAndRender();
+  setInterval(loadAndRender, POLL_MS);
+</script>
+</body>
+</html>
