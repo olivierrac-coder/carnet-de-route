@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suivi projets</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --text: #1d2330; --muted: #6b7385; --line: #e3e6ec;
+    --accent: #c55a11; --accent-soft: #fbeee4;
+    --red: #c62828; --red-soft: #fdecec; --amber: #a86400; --amber-soft: #fff4dc;
+    --green: #2e7d32; --green-soft: #e8f5e9; --blue: #1f5fa8; --blue-soft: #e8f0fb;
+    --input: #f7f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171d; --card: #1d2129; --text: #e8eaef; --muted: #9aa2b1; --line: #2c313b;
+      --accent: #f08a45; --accent-soft: #3a2517;
+      --red: #ff6b6b; --red-soft: #3b1d1f; --amber: #f2b441; --amber-soft: #3a2e15;
+      --green: #6fcf73; --green-soft: #1b3120; --blue: #7fb2f0; --blue-soft: #1a2940;
+      --input: #262b35;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171d; --card: #1d2129; --text: #e8eaef; --muted: #9aa2b1; --line: #2c313b;
+    --accent: #f08a45; --accent-soft: #3a2517;
+    --red: #ff6b6b; --red-soft: #3b1d1f; --amber: #f2b441; --amber-soft: #3a2e15;
+    --green: #6fcf73; --green-soft: #1b3120; --blue: #7fb2f0; --blue-soft: #1a2940;
+    --input: #262b35;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; padding: 12px 16px 48px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 4px 0 14px; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  .sync { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.live { background: var(--green); }
+
+  .today { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0;
+          display: flex; flex-direction: column; }
+  .card > .scroll { max-height: 300px; overflow-y: auto; }
+  .empty { color: var(--muted); font-size: 13px; }
+
+  .alert { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; margin-bottom: 6px; font-size: 14px; }
+  .alert b { white-space: nowrap; }
+  .alert .h { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .lvl-retard, .lvl-fort { background: var(--red-soft); }
+  .lvl-discret { background: var(--amber-soft); }
+
+  .day { display: grid; grid-template-columns: 58px 1fr; gap: 6px; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .day:last-child { border-bottom: 0; }
+  .day .d { color: var(--muted); }
+  .day.is-today .d { color: var(--accent); font-weight: 600; }
+  .chip { display: inline-block; padding: 1px 6px; border-radius: 4px; background: var(--blue-soft); color: var(--blue);
+          margin: 0 4px 3px 0; font-size: 12px; white-space: nowrap; }
+
+  .carnet-grp { font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+  .item { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; font-size: 14px; }
+  .item .tick { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line);
+                background: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 0; }
+  .item .tick:hover { border-color: var(--green); color: var(--green); }
+  .item .when { color: var(--muted); font-size: 12px; white-space: nowrap; margin-left: auto; }
+  .item.late .when { color: var(--red); }
+  .add { display: flex; gap: 6px; margin-top: 8px; }
+  .add input[type=text] { flex: 1; min-width: 0; }
+
+  input, select { font: inherit; font-size: 13px; color: var(--text); background: var(--input);
+                  border: 1px solid var(--line); border-radius: 6px; padding: 5px 6px; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button.btn { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--card); color: var(--text);
+               border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 13px; border: 0; background: var(--card); color: var(--text); padding: 5px 12px; cursor: pointer; }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .toolbar input[type=search] { flex: 1; min-width: 160px; max-width: 320px; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--card); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; font-size: 14px; }
+  tr:last-child td { border-bottom: 0; }
+  tr.row-retard td:first-child, tr.row-fort td:first-child { box-shadow: inset 4px 0 0 var(--red); }
+  tr.row-discret td:first-child { box-shadow: inset 4px 0 0 var(--amber); }
+  .code { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .client { font-weight: 600; }
+  .desc { color: var(--muted); font-size: 13px; }
+  .tag { display: inline-block; font-size: 11px; padding: 0 5px; border-radius: 4px; margin-left: 4px; vertical-align: 1px; }
+  .tag.auto { background: var(--blue-soft); color: var(--blue); }
+  .tag.warn { background: var(--amber-soft); color: var(--amber); }
+  .stack { display: flex; flex-direction: column; gap: 4px; }
+  .line { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .line.nowrap { flex-wrap: nowrap; }
+  .action-input { flex: 1; min-width: 0; }
+  .line.nowrap input[type=date] { flex: none; width: 128px; }
+  .small { font-size: 12px; color: var(--muted); }
+  .hours { font-variant-numeric: tabular-nums; }
+  .st-a-monter { color: var(--red); font-weight: 600; }
+  .money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bar { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 4px; max-width: 160px; }
+  .bar > i { display: block; height: 100%; background: var(--green); }
+  .manual input { width: 96px; }
+  .close-btn { font-size: 12px; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 2px 0; text-decoration: underline; }
+  .fallback { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .setup { background: var(--amber-soft); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px; }
+
+  @media (max-width: 900px) {
+    .today { grid-template-columns: 1fr; }
+    table, thead, tbody, tr, td { display: block; width: 100%; }
+    thead { display: none; }
+    table { background: none; border: 0; }
+    tr { background: var(--card); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; padding: 4px 0; }
+    tr.row-retard, tr.row-fort { border-left: 4px solid var(--red); }
+    tr.row-discret { border-left: 4px solid var(--amber); }
+    tr.row-retard td:first-child, tr.row-fort td:first-child, tr.row-discret td:first-child { box-shadow: none; }
+    td { border: 0; padding: 4px 12px; }
+    td[data-l]::before { content: attr(data-l); display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Suivi projets</h1>
+    <div class="sync"><span class="dot" id="dot"></span><span id="syncLabel">chargement…</span></div>
+  </header>
+  <div id="setup" class="setup" hidden></div>
+
+  <section class="today">
+    <div class="card"><h2>Décomptes</h2><div class="scroll" id="alerts"></div></div>
+    <div class="card"><h2>Cédulé</h2><div class="scroll" id="week"></div></div>
+    <div class="card"><h2>Rappels et tâches</h2><div class="scroll" id="carnet"></div>
+      <form class="add" id="addForm">
+        <select id="addKind"><option value="rappel">Rappel</option><option value="tache">Tâche</option><option value="note">Note</option></select>
+        <input type="text" id="addText" placeholder="Ajouter…" required>
+        <input type="date" id="addDate">
+        <button class="btn primary" type="submit">+</button>
+      </form>
+    </div>
+  </section>
+
+  <section>
+    <div class="toolbar">
+      <div class="seg" id="viewSeg">
+        <button data-v="cours" class="on">En cours</button><button data-v="fermes">Fermés</button><button data-v="tous">Tous</button>
+      </div>
+      <input type="search" id="search" placeholder="Chercher un OR, un client…">
+      <span class="small" id="count"></span>
+    </div>
+    <div id="projects"></div>
+  </section>
+</main>
+
+<script>
+  const CARNET_API = "https://script.google.com/macros/s/AKfycbwgteT0pqHw6WruNVZiKoD2wPehNwR07KOP4NCjbI4fMv7WapKxHL_XQH5AUdoz7rE0/exec";
+  const SUIVI_API = "https://script.google.com/macros/s/AKfycbxqlqq65dhCtOxrYJUYUJzbGMNf9prw-XWufq3QhCjruusgI23-SUxUnsnSVX0LFP5d/exec";  // URL de l'application Web "Suivi projets" (Apps Script)
+  const POLL_MS = 30000;
+  const RECENT_DAYS = 14;        // heures dans les 14 derniers jours = travaux en cours
+  const ALERTE_FORTE_JOUR = 23;  // envoi des decomptes avant le 25
+  const PREMIER_MOIS_SUIVI = "2026-09";  // mois anterieurs ignores (deja factures avant cet outil)
+
+  const ETAPES = ["Bon de commande reçu", "Ouverture admin", "À céduler", "Cédulé", "Travaux en cours",
+                  "Travaux terminés", "Facturation finale / retenue", "Fermé"];
+  const STATUTS = ["À monter", "En approbation", "Facturé"];
+  const MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  const JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+
+  const state = { projets: [], decomptes: {}, carnet: [], maj: "", view: "cours", q: "" };
+  try { window.Telegram?.WebApp?.ready(); window.Telegram?.WebApp?.expand(); } catch (e) {}
+
+  // ------------------------------------------------------------ utilitaires
+  const pad = n => String(n).padStart(2, "0");
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const today = () => new Date(new Date().toDateString());
+  const parseIso = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const fmtDate = s => { const d = parseIso(s); return `${JOURS[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}`; };
+  const fmtShort = s => { const d = parseIso(s); return `${d.getDate()} ${MOIS[d.getMonth()]}`; };
+  const monthKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  const monthLabel = k => MOIS[Number(k.slice(5)) - 1];
+  const money = v => (v === "" || v == null || isNaN(v)) ? "—" :
+    Number(v).toLocaleString("fr-CA", { maximumFractionDigits: 0 }) + " $";
+  const num = v => (v === "" || v == null) ? null : Number(String(v).replace(/\s/g, "").replace(",", "."));
+  const el = (tag, attrs = {}, ...kids) => {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === "class") e.className = v;
+      else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+      else if (v !== false && v != null) e.setAttribute(k, v === true ? "" : v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== false) e.append(k instanceof Node ? k : String(k));
+    return e;
+  };
+
+  // Cle d'acces de l'API Suivi : fournie une fois dans le lien (#k=...), puis gardee sur l'appareil.
+  function pageKey() {
+    const m = location.hash.match(/k=([^&]+)/);
+    try {
+      if (m) { localStorage.setItem("suivi_key", m[1]); history.replaceState(null, "", location.pathname); }
+      return (m && m[1]) || localStorage.getItem("suivi_key") || "";
+    } catch (e) { return m ? m[1] : ""; }
+  }
+  const KEY = pageKey();
+
+  async function call(base, params) {
+    if (base === SUIVI_API) params = { ...params, key: KEY };
+    const url = new URL(base);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "erreur API");
+    return data;
+  }
+
+  // ------------------------------------------------------------ regles metier
+  function etapeOf(p) {
+    const t = today();
+    if (p.ferme === "oui") return { etape: "Fermé", auto: false };
+    const manuelle = p.etape || "";
+    if (ETAPES.indexOf(manuelle) >= ETAPES.indexOf("Travaux terminés")) return { etape: manuelle, auto: false };
+    const a = p.auto || {};
+    const recentHours = a.dernier_jour_heures && (t - parseIso(a.dernier_jour_heures)) / 864e5 <= RECENT_DAYS;
+    const horaire = a.horaire || [];
+    const recentSched = horaire.some(s => { const d = parseIso(s); return d <= t && d >= addDays(t, -7); });
+    if (recentHours || recentSched) return { etape: "Travaux en cours", auto: true };
+    if (horaire.some(s => parseIso(s) > t)) return { etape: "Cédulé", auto: true };
+    if (manuelle) return { etape: manuelle, auto: false };
+    return { etape: a.pas_ouvert ? "Ouverture admin" : "À céduler", auto: true };
+  }
+
+  /** Decomptes dus : mois precedent et mois courant avec des heures Comworker. */
+  function decomptesOf(p) {
+    const t = today();
+    const cur = monthKey(t), prev = monthKey(new Date(t.getFullYear(), t.getMonth() - 1, 1));
+    const heures = (p.auto && p.auto.heures) || {};
+    const out = [];
+    for (const m of [prev, cur]) {
+      if (m < PREMIER_MOIS_SUIVI || !(heures[m] > 0)) continue;
+      const statut = state.decomptes[p.code + "|" + m] || "À monter";
+      let niveau = null;
+      if (statut === "À monter") niveau = m === prev ? "retard" : (t.getDate() >= ALERTE_FORTE_JOUR ? "fort" : "discret");
+      out.push({ mois: m, heures: heures[m], statut, niveau });
+    }
+    return out;
+  }
+  const docLabel = p => (p.auto && p.auto.taux_horaire) ? "Reconnaissance de travaux" : "Décompte";
+  const RANK = { retard: 0, fort: 1, discret: 2 };
+  function worstLevel(p) {
+    const lv = decomptesOf(p).map(d => d.niveau).filter(Boolean);
+    return lv.sort((a, b) => RANK[a] - RANK[b])[0] || null;
+  }
+
+  // ------------------------------------------------------------ ecritures
+  async function saveField(p, field, value) {
+    p[field] = value;
+    try { await call(SUIVI_API, { action: "update", code: p.code, field, value }); setSync(true); }
+    catch (e) { setSync(false, "erreur d'enregistrement"); }
+    renderAll();
+  }
+  async function saveDecompte(p, mois, statut) {
+    state.decomptes[p.code + "|" + mois] = statut;
+    renderAll();
+    try { await call(SUIVI_API, { action: "decompte", code: p.code, mois, statut }); setSync(true); }
+    catch (e) { setSync(false, "erreur d'enregistrement"); }
+  }
+
+  // ------------------------------------------------------------ rendu : aujourd'hui
+  function renderAlerts() {
+    const box = document.getElementById("alerts");
+    const rows = [];
+    for (const p of state.projets.filter(p => p.ferme !== "oui")) {
+      for (const d of decomptesOf(p)) if (d.niveau) rows.push({ p, d });
+    }
+    rows.sort((a, b) => RANK[a.d.niveau] - RANK[b.d.niveau] || a.p.code.localeCompare(b.p.code));
+    box.replaceChildren(...(rows.length ? rows.map(({ p, d }) =>
+      el("div", { class: "alert lvl-" + d.niveau },
+        el("b", {}, p.code),
+        el("span", {}, `${docLabel(p)} ${monthLabel(d.mois)}${d.niveau === "retard" ? " — en retard" : ""}`),
+        el("span", { class: "h" }, `${d.heures} h`))) :
+      [el("div", { class: "empty" }, "Aucun décompte à monter.")]));
+  }
+
+  function renderWeek() {
+    const box = document.getElementById("week");
+    const t = today();
+    const start = addDays(t, -((t.getDay() + 6) % 7));  // lundi
+    const byDay = {};
+    for (const p of state.projets) for (const s of (p.auto?.horaire || [])) (byDay[s] ||= []).push(p.code);
+    const days = [];
+    for (let i = 0; i < 14; i++) {
+      const d = addDays(start, i), k = iso(d);
+      if (d < t || !byDay[k]) continue;
+      days.push(el("div", { class: "day" + (k === iso(t) ? " is-today" : "") },
+        el("span", { class: "d" }, fmtShort(k)),
+        el("span", {}, byDay[k].sort().map(c => el("span", { class: "chip" }, c)))));
+    }
+    box.replaceChildren(...(days.length ? days : [el("div", { class: "empty" }, "Rien à l'horaire d'ici deux semaines.")]));
+  }
+
+  function renderCarnet() {
+    const box = document.getElementById("carnet");
+    const t = iso(today());
+    const active = state.carnet.filter(i => !i.done);
+    const groups = [["rappel", "Rappels"], ["tache", "Tâches"], ["note", "Notes"]];
+    const kids = [];
+    for (const [kind, label] of groups) {
+      const items = active.filter(i => i.kind === kind)
+        .sort((a, b) => ((a.date ? "0" : "1") + (a.date || "")).localeCompare((b.date ? "0" : "1") + (b.date || "")));
+      if (!items.length) continue;
+      kids.push(el("div", { class: "carnet-grp" }, `${label} (${items.length})`));
+      for (const it of items) {
+        kids.push(el("div", { class: "item" + (it.date && it.date < t ? " late" : "") },
+          kind === "note" ? el("span", { style: "width:22px" }) :
+            el("button", { class: "tick", title: "Marquer complété", onclick: async ev => {
+              ev.target.disabled = true;
+              try { await call(CARNET_API, { action: "update", id: it.id, done: "true", completed: t }); it.done = true; renderCarnet(); }
+              catch (e) { ev.target.disabled = false; }
+            } }, "✓"),
+          el("span", {}, it.description),
+          it.date ? el("span", { class: "when" }, fmtShort(it.date)) : null));
+      }
+    }
+    box.replaceChildren(...(kids.length ? kids : [el("div", { class: "empty" }, "Rien pour l'instant.")]));
+  }
+
+  // ------------------------------------------------------------ rendu : projets
+  function projectRow(p) {
+    const et = etapeOf(p);
+    const a = p.auto || {};
+    const level = p.ferme === "oui" ? null : worstLevel(p);
+    const futur = (a.horaire || []).filter(s => s >= iso(today()));
+
+    const etapeSelect = el("select", { onchange: e => saveField(p, "etape", e.target.value) },
+      ETAPES.filter(x => x !== "Fermé").map(x => el("option", { value: x, selected: x === et.etape }, x)));
+    const actionInput = el("input", { class: "action-input", type: "text", value: p.action || "",
+      placeholder: "Prochaine action…", onchange: e => saveField(p, "action", e.target.value.trim()) });
+    const actionDate = el("input", { type: "date", value: p.action_date || "",
+      onchange: e => saveField(p, "action_date", e.target.value) });
+
+    const decs = decomptesOf(p);
+    const decCell = el("div", { class: "stack" },
+      el("div", { class: "hours" },
+        Object.keys(a.heures || {}).sort().reverse().map(m => `${monthLabel(m)} ${a.heures[m]} h`).join(" · ") || el("span", { class: "small" }, "aucune heure")),
+      decs.map(d => el("div", { class: "line" },
+        el("span", { class: "small" }, `${docLabel(p)} ${monthLabel(d.mois)}`),
+        el("select", { class: d.statut === "À monter" ? "st-a-monter" : "",
+          onchange: e => saveDecompte(p, d.mois, e.target.value) },
+          STATUTS.map(s => el("option", { value: s, selected: s === d.statut }, s))))));
+
+    const autoMoney = a.facture != null && !a.dec_erreur && Number(a.contrat) > 0;
+    const contrat = autoMoney ? a.contrat : num(p.contrat_manuel);
+    const facture = autoMoney ? a.facture : num(p.facture_manuel);
+    const pct = contrat > 0 && facture != null ? Math.round(100 * facture / contrat) : null;
+    const moneyCell = el("div", { class: "stack" },
+      el("div", { class: "money" }, `${money(contrat)} → ${money(facture)}`, pct != null ? el("b", {}, `  ${pct} %`) : null),
+      pct != null ? el("div", { class: "bar" }, el("i", { style: `width:${Math.min(pct, 100)}%` })) : null,
+      autoMoney ? el("span", { class: "small" }, `déc. #${a.dec_no}${a.dec_date ? " au " + fmtShort(a.dec_date) : ""}`) :
+        el("div", { class: "line manual" },
+          el("input", { type: "text", inputmode: "decimal", placeholder: "Contrat", value: p.contrat_manuel || "",
+            onchange: e => saveField(p, "contrat_manuel", e.target.value.trim()) }),
+          el("input", { type: "text", inputmode: "decimal", placeholder: "Facturé", value: p.facture_manuel || "",
+            onchange: e => saveField(p, "facture_manuel", e.target.value.trim()) }),
+          el("span", { class: "small" }, a.dec_erreur ? `(${a.dec_erreur})` : "(saisie manuelle)")));
+
+    const fermer = p.ferme === "oui"
+      ? el("button", { class: "close-btn", onclick: () => saveField(p, "ferme", "") }, "Rouvrir")
+      : el("button", { class: "close-btn", onclick: () => saveField(p, "ferme", "oui") }, "Fermer le projet");
+
+    return el("tr", { class: level ? "row-" + level : "" },
+      el("td", { "data-l": "" },
+        el("div", {}, el("span", { class: "code" }, p.code), a.pas_ouvert ? el("span", { class: "tag warn" }, "pas ouvert") : null),
+        el("div", { class: "client" }, p.client),
+        el("div", { class: "desc" }, p.description),
+        fermer),
+      el("td", { "data-l": "Étape / prochaine action" },
+        el("div", { class: "stack" },
+          p.ferme === "oui" ? el("span", {}, `Fermé${p.date_fermeture ? " le " + fmtShort(p.date_fermeture) : ""}`) :
+            el("div", { class: "line" }, etapeSelect, et.auto ? el("span", { class: "tag auto", title: "Déduit des heures et de l'horaire" }, "auto") : null),
+          futur.length ? el("span", { class: "small" }, "Horaire : " + futur.slice(0, 4).map(fmtDate).join(", ") + (futur.length > 4 ? "…" : "")) : null,
+          el("div", { class: "line nowrap" }, actionInput, actionDate))),
+      el("td", { "data-l": "Heures / décompte" }, decCell),
+      el("td", { "data-l": "Contrat → facturé" }, moneyCell));
+  }
+
+  function renderProjects() {
+    const q = state.q.toLowerCase();
+    let list = state.projets.filter(p =>
+      state.view === "tous" || (state.view === "fermes" ? p.ferme === "oui" : p.ferme !== "oui"));
+    if (q) list = list.filter(p => `${p.code} ${p.client} ${p.description} ${p.action}`.toLowerCase().includes(q));
+    const order = p => {
+      const lv = worstLevel(p);
+      return [lv ? RANK[lv] : 9, -ETAPES.indexOf(etapeOf(p).etape) + 10, p.code];
+    };
+    list.sort((a, b) => { const x = order(a), y = order(b);
+      return x[0] - y[0] || x[1] - y[1] || x[2].localeCompare(y[2]); });
+    document.getElementById("count").textContent = `${list.length} projet${list.length > 1 ? "s" : ""}`;
+    document.getElementById("projects").replaceChildren(el("table", {},
+      el("thead", {}, el("tr", {}, ["Projet", "Étape / prochaine action", "Heures / décompte", "Contrat → facturé"].map(h => el("th", {}, h)))),
+      el("tbody", {}, list.map(projectRow))));
+  }
+
+  function renderAll() {
+    renderAlerts(); renderWeek(); renderCarnet(); renderProjects();
+  }
+
+  // ------------------------------------------------------------ chargement
+  function setSync(ok, label) {
+    document.getElementById("dot").classList.toggle("live", ok);
+    const n = new Date();
+    document.getElementById("syncLabel").textContent = label ||
+      `maj ${pad(n.getHours())}:${pad(n.getMinutes())}` + (state.maj ? ` · données auto ${state.maj.slice(5)}` : "");
+  }
+
+  async function load() {
+    // Ne pas redessiner sous les doigts de l'utilisateur pendant une saisie.
+    const a = document.activeElement;
+    if (a && (a.tagName === "INPUT" || a.tagName === "SELECT") && a.id !== "search") return;
+    const [suivi, carnet] = await Promise.allSettled([
+      window.DEMO_DATA ? Promise.resolve(window.DEMO_DATA) : SUIVI_API ? call(SUIVI_API, { action: "list" }) : Promise.reject(new Error("SUIVI_API vide")),
+      call(CARNET_API, { action: "list" }),
+    ]);
+    if (suivi.status === "fulfilled") {
+      state.projets = suivi.value.projets;
+      state.maj = suivi.value.maj_auto || "";
+      state.decomptes = {};
+      for (const d of suivi.value.decomptes || []) state.decomptes[d.code + "|" + d.mois] = d.statut;
+    }
+    if (carnet.status === "fulfilled") state.carnet = carnet.value.items;
+    const setup = document.getElementById("setup");
+    setup.hidden = window.DEMO_DATA || suivi.status === "fulfilled";
+    setup.textContent = !KEY ? "Clé d'accès manquante : ouvre cette page avec le bouton « Suivi » de Telegram."
+      : "Projets inaccessibles pour l'instant (" + (suivi.reason?.message || "erreur") + ").";
+    renderAll();
+    setSync(suivi.status === "fulfilled" && carnet.status === "fulfilled",
+      suivi.status === "rejected" && carnet.status === "rejected" ? "hors ligne" : null);
+  }
+
+  document.getElementById("viewSeg").addEventListener("click", e => {
+    const v = e.target.dataset.v; if (!v) return;
+    state.view = v;
+    for (const b of e.currentTarget.children) b.classList.toggle("on", b.dataset.v === v);
+    renderProjects();
+  });
+  document.getElementById("search").addEventListener("input", e => { state.q = e.target.value; renderProjects(); });
+  document.getElementById("addForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const params = { action: "add", kind: addKind.value, description: addText.value.trim() };
+    if (addDate.value) params.date = addDate.value;
+    try { await call(CARNET_API, params); addText.value = ""; addDate.value = ""; document.activeElement.blur(); load(); }
+    catch (err) { setSync(false, "erreur d'ajout"); }
+  });
+
+  load();
+  setInterval(load, POLL_MS);
+</script>
+</body>
+</html>
