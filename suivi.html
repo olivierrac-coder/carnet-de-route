@@ -117,6 +117,26 @@
   .bar > i { display: block; height: 100%; background: var(--green); }
   .manual input { width: 96px; }
   .close-btn { font-size: 12px; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 2px 0; text-decoration: underline; }
+  .sched { cursor: pointer; border-radius: 4px; }
+  .sched:hover { background: var(--input); }
+  .open-dec { margin-left: 8px; font-size: 12px; color: var(--blue); white-space: nowrap; }
+  .tag.missing { background: var(--red-soft); color: var(--red); font-weight: 600; margin-left: 0; }
+  .alert .tag.missing { margin-left: 6px; }
+  /* Ouvrir un fichier L: n'a de sens que sur le PC */
+  @media (hover: none), (max-width: 900px) { .pc-only { display: none; } }
+
+  .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); display: flex; align-items: center;
+           justify-content: center; padding: 16px; z-index: 10; }
+  .modal[hidden] { display: none; }
+  .modal-card { position: relative; background: var(--card); border-radius: 12px; padding: 18px 18px 14px;
+                width: 100%; max-width: 460px; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+  .m-close { position: absolute; top: 8px; right: 10px; border: 0; background: none; font-size: 22px;
+             color: var(--muted); cursor: pointer; }
+  .m-date { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+  .m-title { font-size: 15px; margin: 0 24px 12px 0; }
+  .m-bloc { margin-bottom: 10px; }
+  .m-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .m-txt { white-space: pre-line; font-size: 14px; }
   .fallback { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
   .setup { background: var(--amber-soft); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px; }
 
@@ -168,6 +188,7 @@
     <div id="projects"></div>
   </section>
 </main>
+<div id="modal" class="modal" hidden onclick="closeModal()"></div>
 
 <script>
   const CARNET_API = "https://script.google.com/macros/s/AKfycbwgteT0pqHw6WruNVZiKoD2wPehNwR07KOP4NCjbI4fMv7WapKxHL_XQH5AUdoz7rE0/exec";
@@ -263,6 +284,33 @@
   }
   const STATUT_HORAIRE = { confirme: "Confirmé", a_valider: "À valider", heure: "Travaux à l'heure" };
   const projectName = p => [p.client, p.description].filter(Boolean).join(" – ");
+  // Ouvre le dernier decompte dans Excel via le lanceur "suividec:" installe sur le PC
+  // (installer_lanceur_decompte.py). Masque sur cellulaire (classe pc-only).
+  const openDecLink = p => p.auto?.dec_fichier
+    ? el("a", { class: "open-dec pc-only", href: "suividec:" + p.code, title: p.auto.dec_fichier }, "Ouvrir ↗") : null;
+  const missingBadge = p => p.auto?.dec_fichier ? null : el("span", { class: "tag missing" }, "Décompte manquant");
+
+  function showSched(p, day) {
+    const det = (p.auto?.horaire_detail || {})[day] || {};
+    const st = (p.auto?.horaire_statut || {})[day] || "";
+    const bloc = (label, txt) => txt ? el("div", { class: "m-bloc" }, el("div", { class: "m-label" }, label), el("div", { class: "m-txt" }, linkify(txt))) : null;
+    const box = el("div", { class: "modal-card", role: "dialog", "aria-modal": "true", onclick: e => e.stopPropagation() },
+      el("button", { class: "m-close", "aria-label": "Fermer", onclick: closeModal }, "×"),
+      el("div", { class: "m-date" }, fmtDate(day), st ? el("span", { class: "chip st-" + st }, STATUT_HORAIRE[st]) : null),
+      el("div", { class: "m-title" }, el("b", {}, p.code), " ", projectName(p)),
+      bloc("Titre", det.titre), bloc("Main-d'œuvre", det.mo), bloc("Description", det.description),
+      det.titre || det.mo || det.description ? null : el("div", { class: "empty" }, "Détail non disponible."));
+    const modal = document.getElementById("modal");
+    modal.replaceChildren(box);
+    modal.hidden = false;
+  }
+  function closeModal() { document.getElementById("modal").hidden = true; }
+  // Rend les liens (plans Google Drive, etc.) cliquables dans le detail de l'horaire.
+  function linkify(txt) {
+    return txt.split(/(https?:\/\/\S+)/).map((part, i) =>
+      i % 2 ? el("a", { href: part, target: "_blank", rel: "noopener" }, "lien ↗") : part);
+  }
+
   const docLabel = p => (p.auto && p.auto.taux_horaire) ? "Reconnaissance de travaux" : "Décompte";
   const RANK = { retard: 0, fort: 1, discret: 2 };
   function worstLevel(p) {
@@ -296,7 +344,8 @@
       el("div", { class: "alert lvl-" + d.niveau },
         el("div", { class: "who" },
           el("div", { class: "name" }, el("b", {}, p.code), " ", projectName(p)),
-          el("div", { class: "what" }, `${docLabel(p)} ${monthLabel(d.mois)}${d.niveau === "retard" ? " — en retard" : ""}`)),
+          el("div", { class: "what" }, `${docLabel(p)} ${monthLabel(d.mois)}${d.niveau === "retard" ? " — en retard" : ""}`,
+            openDecLink(p), missingBadge(p))),
         el("span", { class: "h" }, `${d.heures} h`))) :
       [el("div", { class: "empty" }, "Aucun décompte à monter.")]));
   }
@@ -315,7 +364,8 @@
       days.push(el("div", { class: "day" + (k === iso(t) ? " is-today" : "") },
         el("span", { class: "d" }, fmtShort(k)),
         el("div", {}, byDay[k].sort((a, b) => a.code.localeCompare(b.code)).map(p =>
-          el("div", { class: "sched" }, el("span", { class: "chip st-" + statut(p, k), title: STATUT_HORAIRE[statut(p, k)] || "" }, p.code), projectName(p))))));
+          el("div", { class: "sched", title: "Voir le détail", onclick: () => showSched(p, k) },
+            el("span", { class: "chip st-" + statut(p, k), title: STATUT_HORAIRE[statut(p, k)] || "" }, p.code), projectName(p))))));
     }
     box.replaceChildren(...(days.length ? days : [el("div", { class: "empty" }, "Rien à l'horaire d'ici deux semaines.")]));
   }
@@ -376,13 +426,13 @@
     const moneyCell = el("div", { class: "stack" },
       el("div", { class: "money" }, `${money(contrat)} → ${money(facture)}`, pct != null ? el("b", {}, `  ${pct} %`) : null),
       pct != null ? el("div", { class: "bar" }, el("i", { style: `width:${Math.min(pct, 100)}%` })) : null,
-      autoMoney ? el("span", { class: "small" }, `déc. #${a.dec_no}${a.dec_date ? " au " + fmtShort(a.dec_date) : ""}`) :
+      autoMoney ? el("span", { class: "small" }, `déc. #${a.dec_no}${a.dec_date ? " au " + fmtShort(a.dec_date) : ""}`, openDecLink(p)) :
         el("div", { class: "line manual" },
           el("input", { type: "text", inputmode: "decimal", placeholder: "Contrat", value: p.contrat_manuel || "",
             onchange: e => saveField(p, "contrat_manuel", e.target.value.trim()) }),
           el("input", { type: "text", inputmode: "decimal", placeholder: "Facturé", value: p.facture_manuel || "",
             onchange: e => saveField(p, "facture_manuel", e.target.value.trim()) }),
-          el("span", { class: "small" }, a.dec_erreur ? `(${a.dec_erreur})` : "(saisie manuelle)")));
+          missingBadge(p) || el("span", { class: "small" }, `déc. #${a.dec_no} (montants illisibles)`, openDecLink(p))));
 
     const fermer = p.ferme === "oui"
       ? el("button", { class: "close-btn", onclick: () => saveField(p, "ferme", "") }, "Rouvrir")
@@ -457,6 +507,7 @@
       suivi.status === "rejected" && carnet.status === "rejected" ? "hors ligne" : null);
   }
 
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
   document.getElementById("viewSeg").addEventListener("click", e => {
     const v = e.target.dataset.v; if (!v) return;
     state.view = v;
