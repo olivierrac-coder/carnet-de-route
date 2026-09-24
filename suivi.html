@@ -52,6 +52,12 @@
   .alert .what { font-size: 12px; color: var(--muted); }
   .sched { font-size: 13px; margin-bottom: 3px; display: flex; gap: 2px; align-items: baseline; }
   .sched .chip { flex: none; }
+  /* Couleurs de la legende de l'horaire Google Sheet */
+  .chip.st-confirme { background: #2e9e3e; color: #fff; }
+  .chip.st-a_valider { background: #f2d600; color: #3a3000; }
+  .chip.st-heure { background: #f08c00; color: #fff; }
+  .legend { margin: -4px 0 8px; }
+  .legend .chip { font-size: 11px; }
   .alert .h { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
   .lvl-retard, .lvl-fort { background: var(--red-soft); }
   .lvl-discret { background: var(--amber-soft); }
@@ -138,7 +144,9 @@
 
   <section class="today">
     <div class="card"><h2>Décomptes</h2><div class="scroll" id="alerts"></div></div>
-    <div class="card"><h2>Cédulé</h2><div class="scroll" id="week"></div></div>
+    <div class="card"><h2>Cédulé</h2>
+      <div class="legend"><span class="chip st-confirme">Confirmé</span><span class="chip st-a_valider">À valider</span><span class="chip st-heure">À l'heure</span></div>
+      <div class="scroll" id="week"></div></div>
     <div class="card"><h2>Rappels et tâches</h2><div class="scroll" id="carnet"></div>
       <form class="add" id="addForm">
         <select id="addKind"><option value="rappel">Rappel</option><option value="tache">Tâche</option><option value="note">Note</option></select>
@@ -253,6 +261,7 @@
     }
     return out;
   }
+  const STATUT_HORAIRE = { confirme: "Confirmé", a_valider: "À valider", heure: "Travaux à l'heure" };
   const projectName = p => [p.client, p.description].filter(Boolean).join(" – ");
   const docLabel = p => (p.auto && p.auto.taux_horaire) ? "Reconnaissance de travaux" : "Décompte";
   const RANK = { retard: 0, fort: 1, discret: 2 };
@@ -298,6 +307,7 @@
     const start = addDays(t, -((t.getDay() + 6) % 7));  // lundi
     const byDay = {};
     for (const p of state.projets) for (const s of (p.auto?.horaire || [])) (byDay[s] ||= []).push(p);
+    const statut = (p, day) => (p.auto?.horaire_statut || {})[day] || "";
     const days = [];
     for (let i = 0; i < 14; i++) {
       const d = addDays(start, i), k = iso(d);
@@ -305,7 +315,7 @@
       days.push(el("div", { class: "day" + (k === iso(t) ? " is-today" : "") },
         el("span", { class: "d" }, fmtShort(k)),
         el("div", {}, byDay[k].sort((a, b) => a.code.localeCompare(b.code)).map(p =>
-          el("div", { class: "sched" }, el("span", { class: "chip" }, p.code), projectName(p))))));
+          el("div", { class: "sched" }, el("span", { class: "chip st-" + statut(p, k), title: STATUT_HORAIRE[statut(p, k)] || "" }, p.code), projectName(p))))));
     }
     box.replaceChildren(...(days.length ? days : [el("div", { class: "empty" }, "Rien à l'horaire d'ici deux semaines.")]));
   }
@@ -323,8 +333,7 @@
       kids.push(el("div", { class: "carnet-grp" }, `${label} (${items.length})`));
       for (const it of items) {
         kids.push(el("div", { class: "item" + (it.date && it.date < t ? " late" : "") },
-          kind === "note" ? el("span", { style: "width:22px" }) :
-            el("button", { class: "tick", title: "Marquer complété", onclick: async ev => {
+          el("button", { class: "tick", title: kind === "note" ? "Archiver la note" : "Marquer complété", onclick: async ev => {
               ev.target.disabled = true;
               try { await call(CARNET_API, { action: "update", id: it.id, done: "true", completed: t }); it.done = true; renderCarnet(); }
               catch (e) { ev.target.disabled = false; }
