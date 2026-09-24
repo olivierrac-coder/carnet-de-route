@@ -48,6 +48,10 @@
 
   .alert { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; margin-bottom: 6px; font-size: 14px; }
   .alert b { white-space: nowrap; }
+  .alert .who { min-width: 0; }
+  .alert .what { font-size: 12px; color: var(--muted); }
+  .sched { font-size: 13px; margin-bottom: 3px; display: flex; gap: 2px; align-items: baseline; }
+  .sched .chip { flex: none; }
   .alert .h { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
   .lvl-retard, .lvl-fort { background: var(--red-soft); }
   .lvl-discret { background: var(--amber-soft); }
@@ -249,6 +253,7 @@
     }
     return out;
   }
+  const projectName = p => [p.client, p.description].filter(Boolean).join(" – ");
   const docLabel = p => (p.auto && p.auto.taux_horaire) ? "Reconnaissance de travaux" : "Décompte";
   const RANK = { retard: 0, fort: 1, discret: 2 };
   function worstLevel(p) {
@@ -280,8 +285,9 @@
     rows.sort((a, b) => RANK[a.d.niveau] - RANK[b.d.niveau] || a.p.code.localeCompare(b.p.code));
     box.replaceChildren(...(rows.length ? rows.map(({ p, d }) =>
       el("div", { class: "alert lvl-" + d.niveau },
-        el("b", {}, p.code),
-        el("span", {}, `${docLabel(p)} ${monthLabel(d.mois)}${d.niveau === "retard" ? " — en retard" : ""}`),
+        el("div", { class: "who" },
+          el("div", { class: "name" }, el("b", {}, p.code), " ", projectName(p)),
+          el("div", { class: "what" }, `${docLabel(p)} ${monthLabel(d.mois)}${d.niveau === "retard" ? " — en retard" : ""}`)),
         el("span", { class: "h" }, `${d.heures} h`))) :
       [el("div", { class: "empty" }, "Aucun décompte à monter.")]));
   }
@@ -291,14 +297,15 @@
     const t = today();
     const start = addDays(t, -((t.getDay() + 6) % 7));  // lundi
     const byDay = {};
-    for (const p of state.projets) for (const s of (p.auto?.horaire || [])) (byDay[s] ||= []).push(p.code);
+    for (const p of state.projets) for (const s of (p.auto?.horaire || [])) (byDay[s] ||= []).push(p);
     const days = [];
     for (let i = 0; i < 14; i++) {
       const d = addDays(start, i), k = iso(d);
       if (d < t || !byDay[k]) continue;
       days.push(el("div", { class: "day" + (k === iso(t) ? " is-today" : "") },
         el("span", { class: "d" }, fmtShort(k)),
-        el("span", {}, byDay[k].sort().map(c => el("span", { class: "chip" }, c)))));
+        el("div", {}, byDay[k].sort((a, b) => a.code.localeCompare(b.code)).map(p =>
+          el("div", { class: "sched" }, el("span", { class: "chip" }, p.code), projectName(p))))));
     }
     box.replaceChildren(...(days.length ? days : [el("div", { class: "empty" }, "Rien à l'horaire d'ici deux semaines.")]));
   }
