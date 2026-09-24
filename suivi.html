@@ -221,7 +221,7 @@
   const KEY = pageKey();
 
   async function call(base, params) {
-    if (base === SUIVI_API) params = { ...params, key: KEY };
+    params = { ...params, key: KEY };  // les deux API (Suivi et Carnet) exigent la cle
     const url = new URL(base);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
     const res = await fetch(url);
