@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Réunion du lundi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --vert:#008445; --vert-fonce:#006634; --vert-pale:#e8f4ed;
+  --ink:#111416; --muted:#5f676c; --rule:#e3e6e4; --bg:#f5f6f4; --surface:#ffffff; --note:#fbf6e3;
+  --confirme:#008445; --valider:#c99a00; --heure:#e07400; --annule:#b8177f; --aucun:#9aa0a4;
+  --titre:"Montserrat","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+.bandeau{background:var(--surface);border-bottom:1px solid var(--rule)}
+.bandeau .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px;padding-bottom:14px}
+.bandeau img{height:44px;width:auto;display:block}
+.bandeau .etiq{font:600 12px/1 var(--titre);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:right}
+.wrap{max-width:1240px;margin:0 auto;padding-left:16px;padding-right:16px}
+header.hero{padding:34px 0 18px}
+header.hero .sur{font:700 13px/1 var(--titre);letter-spacing:.1em;text-transform:uppercase;color:var(--vert)}
+h1{font:800 clamp(26px,4.2vw,40px)/1.1 var(--titre);margin:10px 0 8px;letter-spacing:-.01em}
+.meta{color:var(--muted);font-size:13px}
+nav{position:sticky;top:0;z-index:5;background:rgba(245,246,244,.94);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--rule)}
+nav .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding-top:8px;padding-bottom:8px}
+nav a{flex:none;color:var(--ink);text-decoration:none;font:600 13.5px/1 var(--titre);padding:9px 13px;border-radius:999px}
+nav a:hover{background:var(--vert-pale);color:var(--vert-fonce)}
+main{padding-bottom:72px}
+section{padding-top:40px;scroll-margin-top:56px}
+h2{font:700 21px/1.2 var(--titre);margin:0 0 4px;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--vert);flex:none}
+.sous{color:var(--muted);font-size:13.5px;margin:0 0 16px 16px}
+.carte{background:var(--surface);border-radius:14px;padding:18px 20px;box-shadow:0 1px 2px rgba(17,20,22,.05),0 0 0 1px var(--rule)}
+.vide{color:var(--muted)}
+
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi div{background:var(--surface);border-radius:14px;padding:18px 20px;box-shadow:0 0 0 1px var(--rule)}
+.kpi b{display:block;font:800 34px/1.05 var(--titre);color:var(--ink);font-variant-numeric:tabular-nums}
+.kpi span{color:var(--muted);font-size:13px}
+.kpi div:first-child b{color:var(--vert)}
+
+.alertes{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.alertes h3{font:700 14.5px/1.3 var(--titre);margin:0 0 8px}
+.alertes h3 em{font-style:normal;color:var(--muted);font-weight:600}
+.alertes ul{margin:0;padding-left:18px}
+.alertes li{margin:3px 0;font-size:14px}
+
+.pt{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:1px;flex:none}
+.legende{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin:0 0 14px 16px}
+
+.div-titre{font:700 13px/1 var(--titre);letter-spacing:.1em;text-transform:uppercase;color:var(--vert);margin:22px 0 10px 2px}
+.grille{background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--rule)}
+.rang{display:grid;grid-template-columns:240px repeat(var(--nj),minmax(0,1fr));border-top:1px solid var(--rule)}
+.rang:first-child{border-top:0}
+.rang>div{padding:12px;min-width:0;overflow-wrap:anywhere}
+.rang>div+div{border-left:1px solid #f0f2f0}
+.entete{background:#fafbfa;font:600 12.5px/1.3 var(--titre);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.no{font:700 14px/1.3 var(--titre)}
+.client{font-size:14px;font-weight:500}
+.titre{font-size:13px;color:var(--muted)}
+.case{font-size:13px;white-space:pre-line;color:#2b3135}
+.mo{font-weight:600;display:flex;align-items:center;white-space:normal;color:var(--ink);margin-bottom:2px}
+.idem{color:var(--muted);font-style:italic}
+.annule-case{opacity:.5;text-decoration:line-through}
+.lbl{display:none}
+
+.jours{display:grid;grid-template-columns:repeat(var(--nj),minmax(0,1fr));gap:14px}
+.jour .d{font:700 15px/1.2 var(--titre)}
+.jour .c{color:var(--muted);font-size:13px;margin:4px 0 10px}
+.jour .n{background:var(--note);border-radius:8px;padding:9px 11px;font-size:13px;white-space:pre-line;min-height:42px}
+
+.ps-tete{display:flex;gap:18px;align-items:flex-start}
+.ps-badge{flex:none;width:52px;height:52px;border-radius:12px;background:var(--vert);color:#fff;display:grid;place-items:center;font:800 13px/1 var(--titre)}
+.ps-sujet{font:800 22px/1.2 var(--titre);margin:0 0 8px}
+.ps-pourquoi{margin:0;color:#2b3135}
+.ps-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:14px 0}
+.ps-grille h3,.ps-q h3{font:700 12.5px/1 var(--titre);text-transform:uppercase;letter-spacing:.08em;color:var(--vert);margin:0 0 10px}
+.ps-grille ul,.ps-q ul{margin:0;padding-left:18px}
+.ps-grille li,.ps-q li{margin:5px 0;font-size:14px}
+.ps-q{background:var(--vert-pale);box-shadow:none}
+.bouton{display:inline-flex;align-items:center;gap:8px;background:var(--vert);color:#fff;text-decoration:none;
+  font:700 14px/1 var(--titre);padding:13px 18px;border-radius:10px;margin-top:14px}
+.bouton:hover{background:var(--vert-fonce)}
+
+footer{color:var(--muted);font-size:12px;padding:24px 0 40px;border-top:1px solid var(--rule);margin-top:48px}
+
+@media (max-width:900px){
+  .kpi{grid-template-columns:repeat(2,1fr)}
+  .jours{grid-template-columns:1fr 1fr}
+  .rang.entete{display:none}
+  .rang{display:block;padding:6px 0}
+  .rang>div{padding:7px 16px}
+  .rang>div+div{border-left:0}
+  .rang>div.sans{display:none}
+  .lbl{display:block;font:600 11.5px/1.4 var(--titre);text-transform:uppercase;letter-spacing:.06em;color:var(--vert)}
+  .bandeau img{height:36px}
+}
+@media (max-width:520px){ .jours{grid-template-columns:1fr} .bandeau .etiq{display:none} .ps-badge{display:none} }
+@media print{ nav{display:none} body{background:#fff} section{break-inside:avoid-page} .bouton{display:none} }
+</style>
+</head>
+<body>
+<div class="bandeau"><div class="wrap">
+  <img src="assets/logo_intercite.jpeg" alt="Inter-Cité Construction, membre du Groupe Riverin">
+  <div class="etiq">Réunion du lundi</div>
+</div></div>
+
+<nav><div class="wrap">
+  <a href="#passee">Semaine passée</a>
+  <a href="#bref">En bref</a>
+  <a href="#regler">Points à régler</a>
+  <a href="#chantiers">Chantiers</a>
+  <a href="#mo">Main-d'œuvre</a>
+  <a href="#garage">Garage</a>
+  <a href="#sst">Pause sécurité</a>
+</div></nav>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="sur">Semaine qui s'en vient</div>
+    <h1 id="titre">Chargement…</h1>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <section id="passee">
+    <h2>Semaine passée</h2>
+    <p class="sous">Actions de la dernière réunion : faites, encore ouvertes ou reportées.</p>
+    <div class="carte vide">Aucune action pour l'instant. Elles seront reprises ici à partir du compte rendu de la réunion précédente.</div>
+  </section>
+
+  <section id="bref">
+    <h2>En bref</h2>
+    <p class="sous">Tiré de l'horaire.</p>
+    <div class="kpi" id="kpi"></div>
+  </section>
+
+  <section id="regler">
+    <h2>Points à régler</h2>
+    <p class="sous">Relevés automatiquement dans l'horaire.</p>
+    <div class="alertes" id="alertes"></div>
+  </section>
+
+  <section id="chantiers">
+    <h2>Chantiers</h2>
+    <p class="sous">Un chantier par ligne. Chaque case donne la main-d'œuvre et le travail prévu ce jour-là.</p>
+    <div class="legende" id="legende"></div>
+    <div id="divisions"></div>
+  </section>
+
+  <section id="mo">
+    <h2>Main-d'œuvre / congés</h2>
+    <p class="sous">Personnes prévues à l'horaire et notes de congés par jour.</p>
+    <div class="jours" id="jours"></div>
+  </section>
+
+  <section id="garage">
+    <h2>Garage / équipement</h2>
+    <p class="sous">Nouvelles demandes entrées au garage la semaine passée (AppSheet).</p>
+    <div id="garage-contenu"><div class="carte vide">Aucune donnée du garage pour l'instant.</div></div>
+  </section>
+
+  <section id="sst">
+    <h2>Pause sécurité de la semaine</h2>
+    <p class="sous">À présenter par chaque contremaître sur son chantier cette semaine.</p>
+    <div id="sst-contenu"><div class="carte vide">Aucune pause sécurité choisie pour cette semaine.</div></div>
+  </section>
+
+  <footer id="pied">Inter-Cité Construction · membre du Groupe Riverin</footer>
+</main>
+
+<script>
+const DONNEES = /*DONNEES*/null;
+
+const STATUTS = {confirme:"Confirmé", valider:"À valider", heure:"Travaux à l'heure", annule:"Annulé", aucun:"Sans statut"};
+const MOIS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dt = iso => { const [y,m,d] = iso.split("-").map(Number); return {j:d, m:MOIS[m-1], y}; };
+const pt = s => `<span class="pt" style="background:var(--${s})" title="${STATUTS[s]}"></span>`;
+
+function afficher(D){
+  const L = dt(D.lundi), V = dt(D.jours[4].date);
+  document.title = `Réunion du lundi ${L.j} ${L.m}`;
+  $("titre").textContent = `Du ${L.j} ${L.m} au ${V.j} ${V.m} ${V.y}`;
+  $("meta").textContent = `Tiré de l'onglet « ${D.onglet} » de l'horaire, le ${D.genere.replace(" ", " à ")}`;
+
+  const k = D.kpi;
+  $("kpi").innerHTML = [
+    [k.chantiers, "chantiers différents"], [k.journees, "journées-chantier"],
+    [k.pic, `personnes au pic (${k.pic_jour})`], [k.valider, "chantiers à valider"]
+  ].map(([v,l]) => `<div><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+
+  $("alertes").innerHTML = D.alertes.length ? D.alertes.map(a =>
+    `<div class="carte"><h3>${esc(a.type)} <em>(${a.items.length})</em></h3><ul>${a.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul></div>`
+  ).join("") : `<div class="carte vide">Rien à signaler.</div>`;
+
+  // 5 jours, ou 7 si quelque chose est prévu la fin de semaine
+  const fds = D.jours.slice(5).some(j => j.notes || j.chantiers) ||
+              D.divisions.some(d => d.chantiers.some(c => c.jours["5"] || c.jours["6"]));
+  const nj = fds ? 7 : 5;
+  document.documentElement.style.setProperty("--nj", nj);
+  const jours = D.jours.slice(0, nj);
+
+  $("legende").innerHTML = Object.entries(STATUTS).map(([s,n]) => `<span>${pt(s)}${n}</span>`).join("");
+
+  const entete = `<div class="rang entete"><div>Chantier</div>${jours.map(j => { const x = dt(j.date);
+    return `<div>${j.nom.slice(0,3)}. ${x.j} ${x.m}</div>`; }).join("")}</div>`;
+  $("divisions").innerHTML = D.divisions.map(d => `<div class="div-titre">${esc(d.nom)}</div><div class="grille">${entete}${
+    d.chantiers.map(c => {
+      let prec = null;
+      const cases = jours.map((j, i) => {
+        const e = c.jours[String(i)], x = dt(j.date);
+        if (!e) return `<div class="sans"></div>`;
+        let desc = esc(e.desc);
+        if (prec !== null && e.desc === prec) desc = `<span class="idem">idem</span>`; else prec = e.desc;
+        const mo = e.mo ? (/^[\d\s\-àa+]+$/.test(e.mo) ? `${esc(e.mo)} pers.` : esc(e.mo)) : "Main-d'œuvre ?";
+        return `<div class="case${e.statut === "annule" ? " annule-case" : ""}"><span class="lbl">${j.nom} ${x.j} ${x.m}</span>` +
+               `<div class="mo">${pt(e.statut)}${mo}</div>${desc}</div>`;
+      }).join("");
+      return `<div class="rang"><div><div class="no">${esc(c.no || "(sans numéro)")}</div>` +
+             `<div class="client">${esc(c.client)}</div><div class="titre">${esc(c.titre)}</div></div>${cases}</div>`;
+    }).join("")}</div>`).join("");
+
+  $("jours").innerHTML = jours.map(j => { const x = dt(j.date);
+    return `<div class="carte jour"><div class="d">${j.nom} ${x.j} ${x.m}</div>` +
+           `<div class="c">${j.chantiers} chantiers · ${esc(j.pers)} pers.</div>` +
+           `<div class="n">${esc(j.notes) || "—"}</div></div>`; }).join("");
+
+  const ps = D.sst;
+  if (ps) {
+    const blocs = ps.lignes.filter(l => l.puces.length).map(l =>
+      `<div class="carte"><h3>${esc(l.sujet)}</h3><ul>${l.puces.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>`).join("");
+    const lien = (window.PAUSE_URL || "pause.html") + location.search;
+    $("sst-contenu").innerHTML =
+      `<div class="carte"><div class="ps-tete"><div class="ps-badge">SST</div><div>` +
+      `<p class="ps-sujet">${esc(ps.sujet)}</p><p class="ps-pourquoi">${esc(ps.pourquoi)}</p>` +
+      `<a class="bouton" href="${esc(lien)}">Faire la pause sur le chantier →</a></div></div></div>` +
+      `<div class="ps-grille">${blocs}</div>` +
+      `<div class="carte ps-q"><h3>Questions à poser à l'équipe</h3><ul>${ps.questions.map(q => `<li>${esc(q)}</li>`).join("")}</ul></div>`;
+  }
+
+  if (D.garage) {
+    $("garage-contenu").innerHTML = D.garage.length ? `<div class="carte"><ul style="margin:0;padding-left:18px">${
+      D.garage.map(g => `<li><b>${esc(g.date)}</b> · ${esc([g.equipement, g.contrat].filter(Boolean).join(" · ") || g.demande || "")} — ${esc(g.description)} <span class="vide">(${esc(g.nom || "?")}, ${esc(g.statut || "sans statut")})</span></li>`).join("")
+    }</ul></div>` : `<div class="carte vide">Aucune nouvelle demande la semaine passée.</div>`;
+  }
+}
+
+const API_DEPLOYE = "https://script.google.com/macros/s/AKfycbw7uaIBYHH-KVMrYucbi9-ATjm9SIRfaGU3jzbHY57CLJjAQh5ZDQ2Bi9FAX12VyMo/exec";   // URL de l'application Web Apps Script (à remplir au déploiement)
+const CLE = new URLSearchParams(location.search).get("k") || "";
+if (DONNEES) afficher(DONNEES);
+else if (API_DEPLOYE && CLE) fetch(`${API_DEPLOYE}?action=semaine&key=${encodeURIComponent(CLE)}`).then(r => r.json())
+  .then(d => d.lundi ? afficher(d) : ($("titre").textContent = "Lien invalide"))
+  .catch(() => { $("titre").textContent = "Impossible de charger la semaine"; });
+else $("titre").textContent = "Lien incomplet : demande le lien de la semaine à Olivier";
+</script>
+</body>
+</html>

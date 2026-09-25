@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pause sécurité</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --vert:#008445; --vert-fonce:#006634; --vert-pale:#e8f4ed;
+  --ink:#111416; --muted:#5f676c; --rule:#e3e6e4; --bg:#f5f6f4; --surface:#ffffff; --erreur:#c0392b;
+  --titre:"Montserrat","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Inter","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding-left:16px;padding-right:16px}
+.bandeau{background:var(--surface);border-bottom:1px solid var(--rule)}
+.bandeau .wrap{display:flex;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px}
+.bandeau img{height:36px;display:block}
+.bandeau span{font:700 12px/1 var(--titre);letter-spacing:.1em;text-transform:uppercase;color:var(--vert)}
+header{padding:24px 0 8px}
+.sur{font:700 12.5px/1 var(--titre);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+h1{font:800 26px/1.15 var(--titre);margin:8px 0 6px}
+.etapes{display:flex;gap:6px;margin:18px 0 6px}
+.etapes div{flex:1;height:5px;border-radius:3px;background:var(--rule)}
+.etapes div.fait{background:var(--vert)}
+.etape-nom{font:600 13px/1 var(--titre);color:var(--muted);margin-bottom:12px}
+.carte{background:var(--surface);border-radius:14px;padding:18px;box-shadow:0 0 0 1px var(--rule);margin-bottom:14px}
+h2{font:700 18px/1.25 var(--titre);margin:0 0 12px}
+h3{font:700 12.5px/1 var(--titre);text-transform:uppercase;letter-spacing:.08em;color:var(--vert);margin:0 0 10px}
+label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px}
+label:first-child{margin-top:0}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:12px 13px;border:1px solid #cfd4d1;border-radius:10px;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--vert);outline-offset:0;border-color:var(--vert)}
+textarea{min-height:90px;resize:vertical}
+.aide{font-size:13px;color:var(--muted);margin-top:5px}
+ul{margin:0;padding-left:20px} li{margin:6px 0}
+.q{background:var(--vert-pale);box-shadow:none}
+.coche{display:flex;gap:12px;align-items:flex-start;font-weight:600;margin:0}
+.coche input{width:24px;height:24px;flex:none;margin:1px 0 0;accent-color:var(--vert)}
+.ligne{display:flex;gap:8px}
+.ligne input{flex:1}
+.liste{max-height:430px;overflow-y:auto;margin-top:8px;border:1px solid var(--rule);border-radius:12px}
+.liste label{display:flex;align-items:center;gap:12px;margin:0;padding:12px 14px;font-weight:500;font-size:15.5px;border-top:1px solid var(--rule);cursor:pointer}
+.liste label:first-child{border-top:0}
+.liste label.oui{background:var(--vert-pale)}
+.liste input{width:22px;height:22px;flex:none;margin:0;accent-color:var(--vert)}
+.compte{font:600 13.5px/1 var(--titre);color:var(--vert);margin-top:12px}
+.sig{border:1.5px dashed #b9c0bc;border-radius:12px;background:#fff;touch-action:none;width:100%;height:170px;display:block}
+.sig-bas{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:13px;color:var(--muted)}
+.lien{border:0;background:none;color:var(--vert);font:600 14px/1 var(--titre);padding:8px 0;cursor:pointer}
+.temoin{border-top:1px solid var(--rule);padding-top:14px;margin-top:14px}
+.temoin:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.btn{display:block;width:100%;border:0;border-radius:12px;background:var(--vert);color:#fff;font:700 16px/1 var(--titre);padding:17px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.second{background:#fff;color:var(--ink);box-shadow:0 0 0 1px #cfd4d1}
+.btn-petit{border:0;border-radius:10px;background:var(--ink);color:#fff;font:700 14px/1 var(--titre);padding:0 16px;cursor:pointer}
+.actions{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin:18px 0 40px}
+.erreur{color:var(--erreur);font-size:14px;margin-top:10px;min-height:1em}
+.ok{text-align:center;padding:34px 18px}
+.ok .rond{width:64px;height:64px;border-radius:50%;background:var(--vert);color:#fff;display:grid;place-items:center;font-size:32px;margin:0 auto 14px}
+.cache{display:none}
+</style>
+</head>
+<body>
+<div class="bandeau"><div class="wrap">
+  <img src="assets/logo_intercite.jpeg" alt="Inter-Cité Construction">
+  <span>Pause sécurité</span>
+</div></div>
+
+<div class="wrap">
+  <header>
+    <div class="sur" id="semaine">Pause sécurité de la semaine</div>
+    <h1 id="sujet">Chargement…</h1>
+    <div class="etapes"><div id="e1"></div><div id="e2"></div><div id="e3"></div></div>
+    <div class="etape-nom" id="etape-nom"></div>
+  </header>
+
+  <!-- Étape 1 : informations -->
+  <div id="etape1">
+    <div class="carte">
+      <label for="chantier">Chantier</label>
+      <select id="chantier"></select>
+      <div id="autre-bloc" class="cache">
+        <label for="autre">Numéro et nom du chantier</label>
+        <input id="autre" placeholder="Ex. I026F045 — Client">
+      </div>
+      <label for="lieu">Lieu</label>
+      <input id="lieu" placeholder="Ville ou adresse">
+      <label for="date">Date</label>
+      <input id="date" type="date">
+      <label for="animateur">Animateur (contremaître)</label>
+      <input id="animateur" list="dl-tous" autocomplete="off" placeholder="Prénom et nom">
+    </div>
+  </div>
+
+  <!-- Étape 2 : présenter -->
+  <div id="etape2" class="cache">
+    <div class="carte">
+      <h3>Pourquoi cette semaine</h3>
+      <p id="pourquoi" style="margin:0"></p>
+    </div>
+    <div id="blocs"></div>
+    <div class="carte q">
+      <h3>Questions à poser à l'équipe</h3>
+      <ul id="questions"></ul>
+    </div>
+    <div class="carte">
+      <label for="notes">Commentaires et points soulevés par l'équipe</label>
+      <textarea id="notes" placeholder="Facultatif"></textarea>
+      <label class="coche" style="margin-top:16px"><input type="checkbox" id="presente"> J'ai présenté tous les points à l'équipe</label>
+    </div>
+  </div>
+
+  <!-- Étape 3 : présences et signatures -->
+  <div id="etape3" class="cache">
+    <div class="carte">
+      <h2>Travailleurs présents</h2>
+      <input id="cherche" type="search" placeholder="Rechercher un nom…" autocomplete="off">
+      <div class="compte" id="compte-trav">Coche les travailleurs présents.</div>
+      <div id="liste-trav" class="liste"></div>
+      <label for="nom-trav">Quelqu'un qui n'est pas dans la liste?</label>
+      <div class="ligne">
+        <input id="nom-trav" placeholder="Prénom et nom" autocomplete="off">
+        <button class="btn-petit" id="ajout-trav" type="button">Ajouter</button>
+      </div>
+    </div>
+    <div class="carte">
+      <h2>Signature de l'animateur</h2>
+      <canvas class="sig" id="sig-animateur"></canvas>
+      <div class="sig-bas"><span id="nom-anim-sig"></span><button class="lien" type="button" data-efface="sig-animateur">Effacer</button></div>
+    </div>
+    <div class="carte">
+      <h2>Témoin</h2>
+      <div class="aide" style="margin:-6px 0 12px">Au moins un témoin doit signer.</div>
+      <div id="temoins"></div>
+      <button class="lien" type="button" id="ajout-temoin">+ Ajouter un autre témoin</button>
+    </div>
+  </div>
+
+  <!-- Envoyé -->
+  <div id="fini" class="cache">
+    <div class="carte ok">
+      <div class="rond">✓</div>
+      <h2 id="fini-titre">Pause sécurité envoyée</h2>
+      <p class="aide" id="fini-texte" style="font-size:15px"></p>
+    </div>
+  </div>
+
+  <div class="erreur" id="erreur"></div>
+  <div class="actions" id="actions">
+    <button class="btn second" id="retour" type="button">Retour</button>
+    <button class="btn" id="suivant" type="button">Suivant</button>
+  </div>
+</div>
+
+<datalist id="dl-tous"></datalist><datalist id="dl-presents"></datalist>
+<script>
+const DONNEES = /*DONNEES*/null;
+const API_DEPLOYE = "https://script.google.com/macros/s/AKfycbw7uaIBYHH-KVMrYucbi9-ATjm9SIRfaGU3jzbHY57CLJjAQh5ZDQ2Bi9FAX12VyMo/exec";                       // URL de l'application Web Apps Script (à remplir au déploiement)
+const API = DONNEES ? "" : API_DEPLOYE;      // aperçu local : rien ne part
+const CLE = new URLSearchParams(location.search).get("k") || "";
+const MOIS = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = { get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+                set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} } };
+
+let D = null, etape = 1;
+const travailleurs = [];
+const signatures = {};
+
+// ---------- signature au doigt ----------
+function padSignature(canvas){
+  const ctx = canvas.getContext("2d");
+  let trace = false, vide = true;
+  let largeur = 0;
+  function taille(){
+    // l'ouverture du clavier sur téléphone déclenche « resize » : ne redimensionner que si la largeur change
+    const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    if (!r.width || r.width === largeur) return;
+    largeur = r.width;
+    let copie = null;
+    if (!vide) { copie = document.createElement("canvas"); copie.width = canvas.width; copie.height = canvas.height; copie.getContext("2d").drawImage(canvas,0,0); }
+    canvas.width = r.width * dpr; canvas.height = r.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#111416";
+    if (copie) ctx.drawImage(copie,0,0,r.width,r.height);
+  }
+  const pos = e => { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  canvas.addEventListener("pointerdown", e => { trace = true; canvas.setPointerCapture(e.pointerId); ctx.beginPath(); ctx.moveTo(...pos(e)); });
+  canvas.addEventListener("pointermove", e => { if (!trace) return; ctx.lineTo(...pos(e)); ctx.stroke(); vide = false; });
+  ["pointerup","pointercancel"].forEach(t => canvas.addEventListener(t, () => { trace = false; }));
+  const pad = {
+    vide: () => vide,
+    effacer(){ ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.restore(); vide = true; },
+    image(){ // PNG sur fond blanc, taille réduite pour le courriel
+      const o = document.createElement("canvas"); o.width = 600; o.height = 200;
+      const c = o.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0,0,600,200);
+      const k = Math.min(600 / canvas.width, 200 / canvas.height);  // garder les proportions
+      c.drawImage(canvas, (600 - canvas.width*k)/2, (200 - canvas.height*k)/2, canvas.width*k, canvas.height*k);
+      return o.toDataURL("image/png");
+    },
+    taille
+  };
+  signatures[canvas.id] = pad;
+  requestAnimationFrame(taille);
+  return pad;
+}
+document.addEventListener("click", e => { const id = e.target.dataset && e.target.dataset.efface; if (id) signatures[id].effacer(); });
+
+let nbTemoins = 0;
+function ajouterTemoin(){
+  nbTemoins++;
+  const id = "sig-temoin-" + nbTemoins;
+  const div = document.createElement("div");
+  div.className = "temoin";
+  div.innerHTML = `<label for="nom-${id}">Nom du témoin</label><input id="nom-${id}" class="nom-temoin" data-sig="${id}" list="dl-presents" autocomplete="off" placeholder="Prénom et nom">` +
+                  `<label>Signature du témoin</label><canvas class="sig" id="${id}"></canvas>` +
+                  `<div class="sig-bas"><span></span><button class="lien" type="button" data-efface="${id}">Effacer</button></div>`;
+  $("temoins").appendChild(div);
+  padSignature($(id));
+}
+
+// ---------- travailleurs (liste Comworker à cocher + noms ajoutés à la main) ----------
+const presents = new Set();
+const sansAccent = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+function dessinerTravailleurs(){
+  const f = sansAccent($("cherche").value.trim());
+  $("liste-trav").innerHTML = travailleurs.filter(t => !f || sansAccent(t).includes(f)).map(t => {
+    const oui = presents.has(t);
+    return `<label class="${oui ? "oui" : ""}"><input type="checkbox" data-nom="${esc(t)}"${oui ? " checked" : ""}>${esc(t)}</label>`;
+  }).join("") || `<div class="aide" style="padding:12px 14px">Aucun nom trouvé. Ajoute-le plus bas.</div>`;
+  const n = presents.size;
+  $("compte-trav").textContent = n ? `${n} travailleur${n > 1 ? "s" : ""} présent${n > 1 ? "s" : ""}` : "Coche les travailleurs présents.";
+  $("dl-presents").innerHTML = [...presents].map(t => `<option value="${esc(t)}">`).join("");
+}
+$("liste-trav").addEventListener("change", e => {
+  const n = e.target.dataset.nom; if (!n) return;
+  e.target.checked ? presents.add(n) : presents.delete(n);
+  e.target.parentElement.classList.toggle("oui", e.target.checked);
+  dessinerTravailleurs();
+});
+$("cherche").addEventListener("input", dessinerTravailleurs);
+function ajouterTravailleur(){
+  const n = $("nom-trav").value.trim();
+  if (!n) return;
+  const deja = travailleurs.find(t => sansAccent(t) === sansAccent(n));
+  if (!deja) travailleurs.unshift(n);
+  presents.add(deja || n);
+  $("nom-trav").value = ""; $("cherche").value = ""; dessinerTravailleurs();
+}
+$("ajout-trav").onclick = ajouterTravailleur;
+$("nom-trav").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); ajouterTravailleur(); } });
+const listePresents = () => travailleurs.filter(t => presents.has(t));
+$("ajout-temoin").onclick = ajouterTemoin;
+
+// ---------- étapes ----------
+const NOMS = {1:"Étape 1 de 3 · Chantier", 2:"Étape 2 de 3 · Présenter la pause", 3:"Étape 3 de 3 · Présences et signatures"};
+function montrer(n){
+  etape = n;
+  [1,2,3].forEach(i => { $("etape"+i).classList.toggle("cache", i !== n); $("e"+i).classList.toggle("fait", i <= n); });
+  $("etape-nom").textContent = NOMS[n];
+  $("retour").style.visibility = n === 1 ? "hidden" : "visible";
+  $("suivant").textContent = n === 3 ? "Envoyer la pause sécurité" : "Suivant";
+  $("erreur").textContent = "";
+  if (n === 3) { $("nom-anim-sig").textContent = $("animateur").value.trim(); Object.values(signatures).forEach(p => p.taille()); }
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function chantierChoisi(){ return $("chantier").value === "autre" ? $("autre").value.trim() : $("chantier").value; }
+function valider(n){
+  if (n === 1) {
+    if (!chantierChoisi()) return "Choisis le chantier.";
+    if (!$("date").value) return "Indique la date.";
+    if (!$("animateur").value.trim()) return "Indique le nom de l'animateur.";
+  }
+  if (n === 2 && !$("presente").checked) return "Coche la case une fois tous les points présentés.";
+  if (n === 3) {
+    if (!presents.size) return "Coche au moins un travailleur présent.";
+    if (signatures["sig-animateur"].vide()) return "L'animateur doit signer.";
+    const t = [...document.querySelectorAll(".nom-temoin")].filter(i => i.value.trim() && !signatures[i.dataset.sig].vide());
+    if (!t.length) return "Au moins un témoin doit inscrire son nom et signer.";
+  }
+  return "";
+}
+$("retour").onclick = () => montrer(Math.max(1, etape - 1));
+$("suivant").onclick = () => {
+  const err = valider(etape);
+  if (err) { $("erreur").textContent = err; return; }
+  if (etape < 3) { store.set("animateur", $("animateur").value.trim()); montrer(etape + 1); }
+  else envoyer();
+};
+$("chantier").onchange = () => {
+  $("autre-bloc").classList.toggle("cache", $("chantier").value !== "autre");
+  const o = $("chantier").selectedOptions[0];
+  if (o && o.dataset.lieu && !$("lieu").dataset.touche) $("lieu").value = o.dataset.lieu;
+};
+$("lieu").oninput = () => { $("lieu").dataset.touche = "1"; };
+
+// ---------- envoi ----------
+function paquet(){
+  return {
+    type: "pause", cle: CLE, semaine: D.lundi, sujet: D.sst.sujet, secteur: D.sst.secteur,
+    date: $("date").value, chantier: chantierChoisi(), lieu: $("lieu").value.trim(),
+    animateur: $("animateur").value.trim(), travailleurs: listePresents(), notes: $("notes").value.trim(),
+    signature_animateur: signatures["sig-animateur"].image(),
+    temoins: [...document.querySelectorAll(".nom-temoin")]
+      .filter(i => i.value.trim() && !signatures[i.dataset.sig].vide())
+      .map(i => ({nom: i.value.trim(), signature: signatures[i.dataset.sig].image()})),
+    envoye_le: new Date().toISOString()
+  };
+}
+async function envoyer(){
+  const p = paquet();
+  const b = $("suivant"); b.disabled = true; b.textContent = "Envoi…";
+  if (!API) { // aperçu : rien ne part
+    termine("Aperçu seulement", `Rien n'a été envoyé. En service, la pause de ${p.chantier} (${p.travailleurs.length} travailleurs, ${p.temoins.length} témoin) partira par courriel.`);
+    return;
+  }
+  try {
+    // text/plain : évite la requête préalable CORS refusée par Apps Script
+    const r = await fetch(API, {method:"POST", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(p)});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.erreur || "refusé");
+    termine("Pause sécurité envoyée", `Merci ${p.animateur}. Le procès-verbal de ${p.chantier} a été envoyé au département SST.`);
+  } catch (e) {
+    store.set("en_attente", p);
+    b.disabled = false; b.textContent = "Réessayer l'envoi";
+    $("erreur").textContent = "L'envoi n'a pas fonctionné (réseau?). Rien n'est perdu : réessaie quand tu as du signal.";
+  }
+}
+function termine(titre, texte){
+  ["etape1","etape2","etape3","actions"].forEach(id => $(id).classList.add("cache"));
+  $("fini").classList.remove("cache"); $("fini-titre").textContent = titre; $("fini-texte").textContent = texte;
+  $("etape-nom").textContent = ""; [1,2,3].forEach(i => $("e"+i).classList.add("fait"));
+  try { localStorage.removeItem("en_attente"); } catch(e){}
+}
+
+// ---------- affichage ----------
+function afficher(donnees){
+  D = donnees;
+  const ps = D.sst;
+  const [y,m,d] = D.lundi.split("-").map(Number);
+  $("semaine").textContent = `Pause sécurité · semaine du ${d} ${MOIS[m-1]} ${y}`;
+  if (!ps) { $("sujet").textContent = "Aucune pause sécurité cette semaine"; $("actions").classList.add("cache"); $("etape1").classList.add("cache"); return; }
+  document.title = "Pause sécurité · " + ps.sujet;
+  $("sujet").textContent = ps.sujet;
+  $("pourquoi").textContent = ps.pourquoi;
+  $("blocs").innerHTML = ps.lignes.filter(l => l.puces.length).map(l =>
+    `<div class="carte"><h3>${esc(l.sujet)}</h3><ul>${l.puces.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>`).join("");
+  $("questions").innerHTML = ps.questions.map(q => `<li>${esc(q)}</li>`).join("");
+
+  const vus = new Set(), opts = [`<option value="">Choisir…</option>`];
+  D.divisions.filter(dv => /béton/i.test(dv.nom)).forEach(dv => dv.chantiers.forEach(c => {
+    const actif = Object.values(c.jours).some(j => j.statut !== "annule");
+    const v = `${c.no} — ${c.client}`.trim();
+    if (!actif || vus.has(v)) return; vus.add(v);
+    opts.push(`<option value="${esc(v)}" data-lieu="${esc(c.titre)}">${esc(v)}</option>`);
+  }));
+  opts.push(`<option value="autre">Autre chantier…</option>`);
+  $("chantier").innerHTML = opts.join("");
+
+  const t = new Date(); $("date").value = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+  travailleurs.push(...(D.travailleurs || []));
+  $("dl-tous").innerHTML = travailleurs.map(t => `<option value="${esc(t)}">`).join("");
+  dessinerTravailleurs();
+  $("animateur").value = store.get("animateur") || "";
+  padSignature($("sig-animateur"));
+  ajouterTemoin();
+  montrer(1);
+}
+window.addEventListener("resize", () => Object.values(signatures).forEach(p => p.taille()));
+
+if (DONNEES) afficher(DONNEES);
+else if (API && CLE) fetch(`${API}?action=semaine&key=${encodeURIComponent(CLE)}`).then(r => r.json()).then(afficher)
+  .catch(() => { $("sujet").textContent = "Impossible de charger la pause de la semaine"; });
+else $("sujet").textContent = "Lien incomplet : demande le lien de la semaine à Olivier";
+</script>
+</body>
+</html>
