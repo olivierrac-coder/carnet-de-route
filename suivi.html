@@ -119,11 +119,19 @@
   .close-btn { font-size: 12px; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 2px 0; text-decoration: underline; }
   .sched { cursor: pointer; border-radius: 4px; }
   .sched:hover { background: var(--input); }
+  .folder-link { color: inherit; text-decoration: none; }
+  .folder-link:hover { text-decoration: underline; }
+  .chip.folder-link:hover { text-decoration: none; filter: brightness(.9); }
+  .m-horaire { display: inline-block; margin-top: 4px; font-size: 13px; color: var(--blue); }
   .open-dec { margin-left: 8px; font-size: 12px; color: var(--blue); white-space: nowrap; }
   .tag.missing { background: var(--red-soft); color: var(--red); font-weight: 600; margin-left: 0; }
   .alert .tag.missing { margin-left: 6px; }
   /* Ouvrir un fichier L: n'a de sens que sur le PC */
-  @media (hover: none), (max-width: 900px) { .pc-only { display: none; } }
+  @media (hover: none), (max-width: 900px) {
+    .pc-only { display: none; }
+    /* Sur cellulaire, le numero de projet n'ouvre rien (le clic passe a la ligne : detail) */
+    .folder-link { pointer-events: none; }
+  }
 
   .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); display: flex; align-items: center;
            justify-content: center; padding: 16px; z-index: 10; }
@@ -288,6 +296,10 @@
   // (installer_lanceur_decompte.py). Masque sur cellulaire (classe pc-only).
   const openDecLink = p => p.auto?.dec_fichier
     ? el("a", { class: "open-dec pc-only", href: "suividec:" + p.code, title: p.auto.dec_fichier }, "Ouvrir ↗") : null;
+  // Numero de projet cliquable sur PC : ouvre le dossier du projet (L:) via le meme lanceur.
+  const folderLink = (p, content, cls = "") => el("a", { class: "folder-link " + cls, href: "suividec:dossier/" + p.code,
+    title: "Ouvrir le dossier du projet", onclick: e => e.stopPropagation() }, content);
+  const HORAIRE_ID = "1QxqjI_hPeseDNvNFrKGetOY29XQBwq8T8t01xJ8G6L8";
   const missingBadge = p => p.auto?.dec_fichier ? null : el("span", { class: "tag missing" }, "Décompte manquant");
 
   function showSched(p, day) {
@@ -297,8 +309,10 @@
     const box = el("div", { class: "modal-card", role: "dialog", "aria-modal": "true", onclick: e => e.stopPropagation() },
       el("button", { class: "m-close", "aria-label": "Fermer", onclick: closeModal }, "×"),
       el("div", { class: "m-date" }, fmtDate(day), st ? el("span", { class: "chip st-" + st }, STATUT_HORAIRE[st]) : null),
-      el("div", { class: "m-title" }, el("b", {}, p.code), " ", projectName(p)),
+      el("div", { class: "m-title" }, folderLink(p, el("b", {}, p.code)), " ", projectName(p)),
       bloc("Titre", det.titre), bloc("Main-d'œuvre", det.mo), bloc("Description", det.description),
+      det.gid != null ? el("a", { class: "m-horaire", target: "_blank", rel: "noopener",
+        href: `https://docs.google.com/spreadsheets/d/${HORAIRE_ID}/edit#gid=${det.gid}&range=${det.cell}` }, "Voir dans l'horaire ↗") : null,
       det.titre || det.mo || det.description ? null : el("div", { class: "empty" }, "Détail non disponible."));
     const modal = document.getElementById("modal");
     modal.replaceChildren(box);
@@ -343,7 +357,7 @@
     box.replaceChildren(...(rows.length ? rows.map(({ p, d }) =>
       el("div", { class: "alert lvl-" + d.niveau },
         el("div", { class: "who" },
-          el("div", { class: "name" }, el("b", {}, p.code), " ", projectName(p)),
+          el("div", { class: "name" }, folderLink(p, el("b", {}, p.code)), " ", projectName(p)),
           el("div", { class: "what" }, `${docLabel(p)} ${monthLabel(d.mois)}${d.niveau === "retard" ? " — en retard" : ""}`,
             openDecLink(p), missingBadge(p))),
         el("span", { class: "h" }, `${d.heures} h`))) :
@@ -365,7 +379,7 @@
         el("span", { class: "d" }, fmtShort(k)),
         el("div", {}, byDay[k].sort((a, b) => a.code.localeCompare(b.code)).map(p =>
           el("div", { class: "sched", title: "Voir le détail", onclick: () => showSched(p, k) },
-            el("span", { class: "chip st-" + statut(p, k), title: STATUT_HORAIRE[statut(p, k)] || "" }, p.code), projectName(p))))));
+            folderLink(p, p.code, "chip st-" + statut(p, k)), projectName(p))))));
     }
     box.replaceChildren(...(days.length ? days : [el("div", { class: "empty" }, "Rien à l'horaire d'ici deux semaines.")]));
   }
@@ -440,7 +454,7 @@
 
     return el("tr", { class: level ? "row-" + level : "" },
       el("td", { "data-l": "" },
-        el("div", {}, el("span", { class: "code" }, p.code), a.pas_ouvert ? el("span", { class: "tag warn" }, "pas ouvert") : null),
+        el("div", {}, folderLink(p, p.code, "code"), a.pas_ouvert ? el("span", { class: "tag warn" }, "pas ouvert") : null),
         el("div", { class: "client" }, p.client),
         el("div", { class: "desc" }, p.description),
         fermer),
