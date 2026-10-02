@@ -86,6 +86,14 @@ h2::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--v
   font:700 14px/1 var(--titre);padding:13px 18px;border-radius:10px;margin-top:14px}
 .bouton:hover{background:var(--vert-fonce)}
 
+.vis{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:12px 0;border-top:1px solid var(--rule)}
+.vis:first-child{border-top:0;padding-top:0}
+.vis .etat{font:700 12px/1 var(--titre);padding:6px 9px;border-radius:999px;align-self:start;white-space:nowrap}
+.vis .ok{background:var(--vert-pale);color:var(--vert-fonce)}
+.vis .manque{background:#fde8e6;color:#a3261b}
+.vis .detail{font-size:13.5px;color:#2b3135}
+.vis .detail p{margin:4px 0 0}
+
 footer{color:var(--muted);font-size:12px;padding:24px 0 40px;border-top:1px solid var(--rule);margin-top:48px}
 
 @media (max-width:900px){
@@ -114,6 +122,7 @@ footer{color:var(--muted);font-size:12px;padding:24px 0 40px;border-top:1px soli
   <a href="#bref">En bref</a>
   <a href="#regler">Points à régler</a>
   <a href="#chantiers">Chantiers</a>
+  <a href="#visites">Visites</a>
   <a href="#mo">Main-d'œuvre</a>
   <a href="#garage">Garage</a>
   <a href="#sst">Pause sécurité</a>
@@ -149,6 +158,12 @@ footer{color:var(--muted);font-size:12px;padding:24px 0 40px;border-top:1px soli
     <p class="sous">Un chantier par ligne. Chaque case donne la main-d'œuvre et le travail prévu ce jour-là.</p>
     <div class="legende" id="legende"></div>
     <div id="divisions"></div>
+  </section>
+
+  <section id="visites">
+    <h2>Visites des bétonnages</h2>
+    <p class="sous">Bétonnages de la semaine : visite faite (photos ou vidéos dans le groupe Info chantier, dans les 3 semaines avant) ou non.</p>
+    <div id="visites-contenu"><div class="carte vide">Aucune donnée du groupe Info chantier pour l'instant.</div></div>
   </section>
 
   <section id="mo">
@@ -241,6 +256,21 @@ function afficher(D){
       `<a class="bouton" href="${esc(lien)}">Faire la pause sur le chantier →</a></div></div></div>` +
       `<div class="ps-grille">${blocs}</div>` +
       `<div class="carte ps-q"><h3>Questions à poser à l'équipe</h3><ul>${ps.questions.map(q => `<li>${esc(q)}</li>`).join("")}</ul></div>`;
+  }
+
+  if (D.visites) {
+    const V = D.visites, b = V.betonnages || [];
+    const nbOk = b.filter(x => x.statut === "faite").length;
+    const ligne = x => `<div class="vis"><span class="etat ${x.statut === "faite" ? "ok" : "manque"}">${x.statut === "faite" ? "✓ Visite faite" : "✗ Pas de visite"}</span>` +
+      `<div><span class="no">${esc(x.projet)}</span> · ${esc(x.titre)} <span class="vide">— ${esc(x.jours.join(", "))}</span>` +
+      `<div class="detail">${(x.visites || []).map(v => `<p><b>${esc(v.date)}</b> · ${esc(v.auteur)} · ${v.photos} photo(s), ${v.videos} vidéo(s)${v.resume ? " — " + esc(v.resume) : ""}</p>`).join("")}</div></div></div>`;
+    $("visites-contenu").innerHTML =
+      (b.length ? `<div class="carte"><p class="vide" style="margin:0 0 10px">${nbOk} sur ${b.length} bétonnage(s) visité(s)` +
+        (V.groupe_depuis ? ` · groupe Info chantier actif depuis le ${esc(V.groupe_depuis)}` : "") + `</p>${b.map(ligne).join("")}</div>`
+        : `<div class="carte vide">Aucun bétonnage à vérifier cette semaine.</div>`) +
+      ((V.en_continu || []).length ? `<p class="sous" style="margin-top:10px">En continu, pas de visite requise : ${V.en_continu.map(x => esc(x.projet + " " + x.titre)).join(" · ")}</p>` : "") +
+      ((V.non_associees || []).length ? `<div class="carte" style="margin-top:10px"><p class="vide" style="margin:0 0 6px">Photos ou vidéos non associées à un bétonnage de la semaine :</p><ul style="margin:0;padding-left:18px">${
+        V.non_associees.map(v => `<li><b>${esc(v.date)}</b> · ${esc(v.auteur)} · ${v.photos} photo(s), ${v.videos} vidéo(s)${v.remarque ? " (" + esc(v.remarque) + ")" : ""}${v.resume ? " — " + esc(v.resume) : ""}</li>`).join("")}</ul></div>` : "");
   }
 
   if (D.garage) {
